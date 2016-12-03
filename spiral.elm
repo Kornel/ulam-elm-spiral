@@ -13,7 +13,7 @@ type Msg = Resize Int Int
 zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
-n = 10
+n = 20
 elements = range 1 (n^2)
 
 dx : Int -> Int
@@ -34,11 +34,11 @@ dys = elements
 
 xs ww = dxs
       |> List.scanl (+) 0
-      |> map (\x -> x * 20 + ww // 2)
+      |> map (\x -> x * 30 + ww // 2)
 
 ys wh = dys
       |> List.scanl (+) 0
-      |> map (\x -> x * 20 + wh // 2)
+      |> map (\x -> x * 30 + wh // 2)
 
 
 coordAndNumbers ww wh = zip3 (xs ww) (ys wh) (range 1 (n^2))
@@ -72,7 +72,6 @@ initialSizeCmd : Cmd Msg
 initialSizeCmd =
   Task.perform sizeToMsg Window.size
 
-
 init : (Model, Cmd Msg)
 init =
     ( { screen =
@@ -92,7 +91,6 @@ view model =
         es = model.elements
     in
       plotSpiral sw sh es
-
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
