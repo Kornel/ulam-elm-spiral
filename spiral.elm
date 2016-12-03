@@ -4,22 +4,19 @@ import Svg exposing (text_, text, rect, svg)
 import Svg.Attributes exposing (..)
 import List exposing (length, concat, map, repeat, range, take, tail, map3)
 import Task
--- import Action exposing (Msg(WindowResize, NoOp), update)
 
 type Msg = Resize Int Int
-
-
 
 zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
-n = 20
+n = 30
 elements = range 1 (n^2)
 
 dx : Int -> Int
 dx n = (-1)^((n+1) % 2)
 dy : Int -> Int
-dy n = (-1)^(n % 2)
+dy n =  (-1)^(n % 2)
 
 dxs = elements
       |> map (\x -> repeat x (dx x) ++ repeat x 0)
@@ -31,54 +28,58 @@ dys = elements
       |> concat
       |> take (n^2 - 1)
 
-
-xs ww = dxs
+computeXcoord shiftx = dxs
       |> List.scanl (+) 0
-      |> map (\x -> x * 30 + ww // 2)
+      |> map (\x -> x * 30 + shiftx)
 
-ys wh = dys
+computeYcoord shifty = dys
       |> List.scanl (+) 0
-      |> map (\x -> x * 30 + wh // 2)
+      |> map (\x -> x * 30 + shifty)
 
+coordAndNumbers screenWidth screenHeight =
+  let
+    xs = computeXcoord (screenWidth // 2)
+    ys = computeYcoord (screenHeight // 2)
+    nums = range 1 (n^2)
+  in
+    zip3 xs ys nums
 
-coordAndNumbers ww wh = zip3 (xs ww) (ys wh) (range 1 (n^2))
-
-
+type alias UElements = List (Int, Int, Int)
 type alias Model =
     { screen :
         { width : Int
         , height : Int
         },
-      elements: List (Int, Int, Int)
+      elements: UElements
     }
 
-plotSpiral : Int -> Int -> List (Int, Int, Int) -> Html.Html msg
-plotSpiral sw sh es =
+plotSpiral : Int -> Int -> UElements -> Html.Html msg
+plotSpiral screenWidth screenHeight elements =
   let
-    toElem (a, b, c) =
+    toText (xcoord, ycoord, n) =
       text_
-        [ x (toString (a))
-        , y (toString (sh - (b)))
-        ] [Html.text (toString c)]
+        [ x (toString xcoord)
+        , y (toString ycoord)
+        ] [Html.text (toString n)]
+    strWidth = toString screenWidth
+    strHeight = toString screenHeight
   in
-    List.map toElem es
-     |> svg [ width (toString sw), height (toString sh)]
+    List.map toText elements
+     |> svg [ width strWidth, height strHeight]
 
 sizeToMsg : Window.Size -> Msg
-sizeToMsg size =
-  Resize size.width size.height
+sizeToMsg size = Resize size.width size.height
 
 initialSizeCmd : Cmd Msg
-initialSizeCmd =
-  Task.perform sizeToMsg Window.size
+initialSizeCmd = Task.perform sizeToMsg Window.size
 
 init : (Model, Cmd Msg)
 init =
     ( { screen =
-        {  width = 1024
-         , height = 768
+        {  width = 0
+         , height = 0
         },
-        elements = coordAndNumbers 1024 768
+        elements = []
       },
       initialSizeCmd
     )
@@ -86,27 +87,26 @@ init =
 view : Model -> Html Msg
 view model =
     let
-        sw = model.screen.width
-        sh = model.screen.height
-        es = model.elements
+      sw = model.screen.width
+      sh = model.screen.height
+      es = model.elements
     in
       plotSpiral sw sh es
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     let m =
-        case msg of
-            Resize w h -> {model | screen = {width = w, height = h}, elements = coordAndNumbers w h}
+      case msg of
+        Resize w h -> {model | screen = {width = w, height = h}
+                             , elements = coordAndNumbers w h}
     in
-        (m, Cmd.none)
+      (m, Cmd.none)
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Window.resizes (\size -> Resize size.width size.height)
+subscriptions model = Window.resizes (\size -> Resize size.width size.height)
 
-main =
-   Html.program
+main = Html.program
      { init = init
      , view = view
      , update = update
