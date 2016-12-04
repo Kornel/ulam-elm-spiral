@@ -4,6 +4,7 @@ import Svg exposing (text_, text, rect, svg)
 import Svg.Attributes exposing (..)
 import List exposing (length, concat, map, repeat, range, take, tail, map3)
 import Task
+import Arithmetic exposing(isPrime)
 
 type Msg = Resize Int Int
 
@@ -13,18 +14,16 @@ zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 n = 30
 elements = range 1 (n^2)
 
-dx : Int -> Int
-dx n = (-1)^((n+1) % 2)
-dy : Int -> Int
-dy n =  (-1)^(n % 2)
+xTerm n = (-1)^((n+1) % 2)
+yTerm n = (-1)^(n % 2)
 
 dxs = elements
-      |> map (\x -> repeat x (dx x) ++ repeat x 0)
+      |> map (\x -> repeat x (xTerm x) ++ repeat x 0)
       |> concat
       |> take (n^2 - 1)
 
 dys = elements
-      |> map (\x -> repeat x 0 ++ (repeat x (dy x)))
+      |> map (\x -> repeat x 0 ++ (repeat x (yTerm x)))
       |> concat
       |> take (n^2 - 1)
 
@@ -60,7 +59,8 @@ plotSpiral screenWidth screenHeight elements =
       text_
         [ x (toString xcoord)
         , y (toString ycoord)
-        ] [Html.text (toString n)]
+        , fontWeight (if (isPrime n) then "bold" else "")
+        ] [Html.text (if (isPrime n) then (toString n) else "-")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
   in

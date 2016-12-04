@@ -8819,12 +8819,607 @@ var _elm_lang$window$Window$subMap = F2(
 			});
 	});
 _elm_lang$core$Native_Platform.effectManagers['Window'] = {pkg: 'elm-lang/window', init: _elm_lang$window$Window$init, onEffects: _elm_lang$window$Window$onEffects, onSelfMsg: _elm_lang$window$Window$onSelfMsg, tag: 'sub', subMap: _elm_lang$window$Window$subMap};
+var _user$project$Arithmetic$primeFactors = function (n) {
+	var go = F3(
+		function (p, n, factors) {
+			go:
+			while (true) {
+				if (_elm_lang$core$Native_Utils.cmp(p * p, n) > 0) {
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$List$reverse(factors),
+						{
+							ctor: '::',
+							_0: n,
+							_1: {ctor: '[]'}
+						});
+				} else {
+					if (_elm_lang$core$Native_Utils.eq(
+						A2(_elm_lang$core$Basics_ops['%'], n, p),
+						0)) {
+						var _v0 = p,
+							_v1 = (n / p) | 0,
+							_v2 = {ctor: '::', _0: p, _1: factors};
+						p = _v0;
+						n = _v1;
+						factors = _v2;
+						continue go;
+					} else {
+						var _v3 = (p + 1) + A2(_elm_lang$core$Basics_ops['%'], p, 2),
+							_v4 = n,
+							_v5 = factors;
+						p = _v3;
+						n = _v4;
+						factors = _v5;
+						continue go;
+					}
+				}
+			}
+		});
+	return (_elm_lang$core$Native_Utils.cmp(n, 1) < 1) ? {ctor: '[]'} : A3(
+		go,
+		2,
+		n,
+		{ctor: '[]'});
+};
+var _user$project$Arithmetic$primeExponents = function () {
+	var runLengthCons = F2(
+		function (x, acc) {
+			var _p0 = acc;
+			if (_p0.ctor === '[]') {
+				return {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: x, _1: 1},
+					_1: {ctor: '[]'}
+				};
+			} else {
+				var _p3 = _p0._0._0;
+				var _p2 = _p0._1;
+				var _p1 = _p0._0._1;
+				return _elm_lang$core$Native_Utils.eq(x, _p3) ? {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: _p3, _1: _p1 + 1},
+					_1: _p2
+				} : {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: x, _1: 1},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: _p3, _1: _p1},
+						_1: _p2
+					}
+				};
+			}
+		});
+	return function (_p4) {
+		return A3(
+			_elm_lang$core$List$foldr,
+			runLengthCons,
+			{ctor: '[]'},
+			_user$project$Arithmetic$primeFactors(_p4));
+	};
+}();
+var _user$project$Arithmetic$shiftToOdd = function (n) {
+	var f = F2(
+		function (k, m) {
+			f:
+			while (true) {
+				if (_elm_lang$core$Native_Utils.eq(
+					A2(_elm_lang$core$Basics_ops['%'], m, 2),
+					1)) {
+					return {ctor: '_Tuple2', _0: k, _1: m};
+				} else {
+					var _v7 = k + 1,
+						_v8 = (m / 2) | 0;
+					k = _v7;
+					m = _v8;
+					continue f;
+				}
+			}
+		});
+	return A2(f, 0, n);
+};
+var _user$project$Arithmetic$extendedGcd = F2(
+	function (a, b) {
+		var egcd = F6(
+			function (n1, o1, n2, o2, r, s) {
+				egcd:
+				while (true) {
+					if (_elm_lang$core$Native_Utils.eq(s, 0)) {
+						return {ctor: '_Tuple3', _0: r, _1: o1, _2: o2};
+					} else {
+						var q = (r / s) | 0;
+						var _v9 = o1 - (q * n1),
+							_v10 = n1,
+							_v11 = o2 - (q * n2),
+							_v12 = n2,
+							_v13 = s,
+							_v14 = A2(_elm_lang$core$Basics$rem, r, s);
+						n1 = _v9;
+						o1 = _v10;
+						n2 = _v11;
+						o2 = _v12;
+						r = _v13;
+						s = _v14;
+						continue egcd;
+					}
+				}
+			});
+		var _p5 = A6(
+			egcd,
+			0,
+			1,
+			1,
+			0,
+			_elm_lang$core$Basics$abs(a),
+			_elm_lang$core$Basics$abs(b));
+		var d = _p5._0;
+		var x = _p5._1;
+		var y = _p5._2;
+		var u = (_elm_lang$core$Native_Utils.cmp(a, 0) < 0) ? _elm_lang$core$Basics$negate(x) : x;
+		var v = (_elm_lang$core$Native_Utils.cmp(b, 0) < 0) ? _elm_lang$core$Basics$negate(y) : y;
+		return {ctor: '_Tuple3', _0: d, _1: u, _2: v};
+	});
+var _user$project$Arithmetic$modularInverse = F2(
+	function (a, modulus) {
+		var _p6 = A2(_user$project$Arithmetic$extendedGcd, a, modulus);
+		var d = _p6._0;
+		var x = _p6._1;
+		return _elm_lang$core$Native_Utils.eq(d, 1) ? _elm_lang$core$Maybe$Just(
+			A2(_elm_lang$core$Basics_ops['%'], x, modulus)) : _elm_lang$core$Maybe$Nothing;
+	});
+var _user$project$Arithmetic$chineseRemainder = function (equations) {
+	var fromJustCons = F2(
+		function (x, acc) {
+			var _p7 = x;
+			if (_p7.ctor === 'Just') {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})(_p7._0),
+					acc);
+			} else {
+				return _elm_lang$core$Maybe$Nothing;
+			}
+		});
+	var fromJustList = A2(
+		_elm_lang$core$List$foldr,
+		fromJustCons,
+		_elm_lang$core$Maybe$Just(
+			{ctor: '[]'}));
+	var _p8 = _elm_lang$core$List$unzip(equations);
+	var residues = _p8._0;
+	var moduli = _p8._1;
+	var m = _elm_lang$core$List$product(moduli);
+	var v = A2(
+		_elm_lang$core$List$map,
+		function (x) {
+			return (m / x) | 0;
+		},
+		moduli);
+	var inverses = fromJustList(
+		A3(_elm_lang$core$List$map2, _user$project$Arithmetic$modularInverse, v, moduli));
+	return A2(
+		_elm_lang$core$Maybe$map,
+		function (_p9) {
+			return A3(
+				_elm_lang$core$Basics$flip,
+				F2(
+					function (x, y) {
+						return A2(_elm_lang$core$Basics_ops['%'], x, y);
+					}),
+				m,
+				_elm_lang$core$List$sum(
+					A3(
+						_elm_lang$core$List$map2,
+						F2(
+							function (x, y) {
+								return x * y;
+							}),
+						v,
+						A3(
+							_elm_lang$core$List$map2,
+							F2(
+								function (x, y) {
+									return x * y;
+								}),
+							residues,
+							_p9))));
+		},
+		fromJustList(
+			A3(_elm_lang$core$List$map2, _user$project$Arithmetic$modularInverse, v, moduli)));
+};
+var _user$project$Arithmetic$gcd = F2(
+	function (a, b) {
+		var gcd0 = F2(
+			function (a, b) {
+				gcd0:
+				while (true) {
+					if (_elm_lang$core$Native_Utils.eq(b, 0)) {
+						return a;
+					} else {
+						var _v16 = b,
+							_v17 = A2(_elm_lang$core$Basics_ops['%'], a, b);
+						a = _v16;
+						b = _v17;
+						continue gcd0;
+					}
+				}
+			});
+		return A2(
+			gcd0,
+			_elm_lang$core$Basics$abs(a),
+			_elm_lang$core$Basics$abs(b));
+	});
+var _user$project$Arithmetic$lcm = F2(
+	function (a, b) {
+		return _elm_lang$core$Basics$abs(
+			((a / A2(_user$project$Arithmetic$gcd, a, b)) | 0) * b);
+	});
+var _user$project$Arithmetic$isCoprimeTo = F2(
+	function (a, b) {
+		return _elm_lang$core$Native_Utils.eq(
+			A2(_user$project$Arithmetic$gcd, a, b),
+			1);
+	});
+var _user$project$Arithmetic$divisorCount = function (_p10) {
+	return _elm_lang$core$List$product(
+		A2(
+			_elm_lang$core$List$map,
+			function (_p11) {
+				var _p12 = _p11;
+				return _p12._1 + 1;
+			},
+			_user$project$Arithmetic$primeExponents(_p10)));
+};
+var _user$project$Arithmetic$divisors = function () {
+	var f = function (_p13) {
+		var _p14 = _p13;
+		return _elm_lang$core$List$concatMap(
+			function (a) {
+				return A2(
+					_elm_lang$core$List$map,
+					function (x) {
+						return Math.pow(_p14._0, x) * a;
+					},
+					A2(_elm_lang$core$List$range, 0, _p14._1));
+			});
+	};
+	return function (_p15) {
+		return _elm_lang$core$List$sort(
+			A3(
+				_elm_lang$core$List$foldr,
+				f,
+				{
+					ctor: '::',
+					_0: 1,
+					_1: {ctor: '[]'}
+				},
+				_user$project$Arithmetic$primeExponents(_p15)));
+	};
+}();
+var _user$project$Arithmetic$properDivisors = function (n) {
+	return A2(
+		_elm_lang$core$List$filter,
+		F2(
+			function (x, y) {
+				return !_elm_lang$core$Native_Utils.eq(x, y);
+			})(n),
+		_user$project$Arithmetic$divisors(n));
+};
+var _user$project$Arithmetic$isMultipleOf = F2(
+	function (a, b) {
+		return _elm_lang$core$Native_Utils.eq(
+			A2(_elm_lang$core$Basics_ops['%'], a, b),
+			0);
+	});
+var _user$project$Arithmetic$divides = F2(
+	function (a, b) {
+		return _elm_lang$core$Native_Utils.eq(
+			A2(_elm_lang$core$Basics_ops['%'], b, a),
+			0);
+	});
+var _user$project$Arithmetic$cubeRoot = function (n) {
+	return Math.pow(n, 1 / 3);
+};
+var _user$project$Arithmetic$intCubeRoot = function (_p16) {
+	return _elm_lang$core$Basics$round(
+		_user$project$Arithmetic$cubeRoot(
+			_elm_lang$core$Basics$toFloat(_p16)));
+};
+var _user$project$Arithmetic$exactIntCubeRoot = function (n) {
+	var s = _user$project$Arithmetic$intCubeRoot(n);
+	return _elm_lang$core$Native_Utils.eq(
+		Math.pow(s, 3),
+		n) ? _elm_lang$core$Maybe$Just(s) : _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Arithmetic$isCube = function (n) {
+	var r = A2(_elm_lang$core$Basics_ops['%'], n, 63);
+	return (_elm_lang$core$Native_Utils.eq(r, 0) || (_elm_lang$core$Native_Utils.eq(r, 1) || (_elm_lang$core$Native_Utils.eq(r, 8) || (_elm_lang$core$Native_Utils.eq(r, 27) || (_elm_lang$core$Native_Utils.eq(r, 28) || (_elm_lang$core$Native_Utils.eq(r, 35) || (_elm_lang$core$Native_Utils.eq(r, 36) || (_elm_lang$core$Native_Utils.eq(r, 55) || _elm_lang$core$Native_Utils.eq(r, 62))))))))) && _elm_lang$core$Native_Utils.eq(
+		Math.pow(
+			_user$project$Arithmetic$intCubeRoot(n),
+			3),
+		n);
+};
+var _user$project$Arithmetic$intSquareRoot = function (_p17) {
+	return _elm_lang$core$Basics$round(
+		_elm_lang$core$Basics$sqrt(
+			_elm_lang$core$Basics$toFloat(_p17)));
+};
+var _user$project$Arithmetic$exactIntSquareRoot = function (n) {
+	var s = _user$project$Arithmetic$intSquareRoot(n);
+	return _elm_lang$core$Native_Utils.eq(s * s, n) ? _elm_lang$core$Maybe$Just(s) : _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Arithmetic$isSquare = function (n) {
+	var r = A2(_elm_lang$core$Basics_ops['%'], n, 48);
+	return (_elm_lang$core$Native_Utils.eq(r, 0) || (_elm_lang$core$Native_Utils.eq(r, 1) || (_elm_lang$core$Native_Utils.eq(r, 4) || (_elm_lang$core$Native_Utils.eq(r, 9) || (_elm_lang$core$Native_Utils.eq(r, 16) || (_elm_lang$core$Native_Utils.eq(r, 25) || (_elm_lang$core$Native_Utils.eq(r, 33) || _elm_lang$core$Native_Utils.eq(r, 36)))))))) && _elm_lang$core$Native_Utils.eq(
+		Math.pow(
+			_user$project$Arithmetic$intSquareRoot(n),
+			2),
+		n);
+};
+var _user$project$Arithmetic$primesBelow = function (n) {
+	var trueIndices = function () {
+		var g = F2(
+			function (x, acc) {
+				var _p18 = x;
+				if (_p18.ctor === 'Just') {
+					return {ctor: '::', _0: _p18._0, _1: acc};
+				} else {
+					return acc;
+				}
+			});
+		var f = F2(
+			function (i, pred) {
+				return pred ? _elm_lang$core$Maybe$Just(i) : _elm_lang$core$Maybe$Nothing;
+			});
+		return function (_p19) {
+			return A3(
+				_elm_lang$core$Array$foldr,
+				g,
+				{ctor: '[]'},
+				A2(_elm_lang$core$Array$indexedMap, f, _p19));
+		};
+	}();
+	var sieve = F2(
+		function (p, arr) {
+			var mark = F4(
+				function (i, p, n, arr) {
+					mark:
+					while (true) {
+						if (_elm_lang$core$Native_Utils.cmp(i * p, n) > -1) {
+							return arr;
+						} else {
+							var _v21 = i + 1,
+								_v22 = p,
+								_v23 = n,
+								_v24 = A3(_elm_lang$core$Array$set, i * p, false, arr);
+							i = _v21;
+							p = _v22;
+							n = _v23;
+							arr = _v24;
+							continue mark;
+						}
+					}
+				});
+			return _elm_lang$core$Native_Utils.eq(
+				A2(_elm_lang$core$Array$get, p, arr),
+				_elm_lang$core$Maybe$Just(true)) ? A4(mark, 2, p, n, arr) : arr;
+		});
+	var initial = A3(
+		_elm_lang$core$Array$set,
+		1,
+		false,
+		A3(
+			_elm_lang$core$Array$set,
+			0,
+			false,
+			A2(_elm_lang$core$Array$repeat, n, true)));
+	var ps = {
+		ctor: '::',
+		_0: 2,
+		_1: A2(
+			_elm_lang$core$List$map,
+			function (x) {
+				return (2 * x) + 1;
+			},
+			A2(
+				_elm_lang$core$List$range,
+				1,
+				(_user$project$Arithmetic$intSquareRoot(n) / 2) | 0))
+	};
+	return trueIndices(
+		A3(_elm_lang$core$List$foldr, sieve, initial, ps));
+};
+var _user$project$Arithmetic$safeSquareRoot = function (n) {
+	return (_elm_lang$core$Native_Utils.cmp(n, 0) < 0) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
+		_elm_lang$core$Basics$sqrt(n));
+};
+var _user$project$Arithmetic$squareRoot = _elm_lang$core$Basics$sqrt;
+var _user$project$Arithmetic$fromBase = function (base) {
+	return A2(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (x, acc) {
+				return (acc * base) + x;
+			}),
+		0);
+};
+var _user$project$Arithmetic$toBase = F2(
+	function (base, n) {
+		var go = F2(
+			function (x, acc) {
+				go:
+				while (true) {
+					if (_elm_lang$core$Native_Utils.cmp(x, 0) < 1) {
+						return acc;
+					} else {
+						var _v25 = (x / base) | 0,
+							_v26 = {
+							ctor: '::',
+							_0: A2(_elm_lang$core$Basics_ops['%'], x, base),
+							_1: acc
+						};
+						x = _v25;
+						acc = _v26;
+						continue go;
+					}
+				}
+			});
+		var n0 = _elm_lang$core$Basics$abs(n);
+		return A2(
+			go,
+			n0,
+			{ctor: '[]'});
+	});
+var _user$project$Arithmetic$isOdd = function (n) {
+	return !_elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], n, 2),
+		0);
+};
+var _user$project$Arithmetic$powerMod = F3(
+	function (base, exponent, modulus) {
+		var go = F3(
+			function (b, e, r) {
+				go:
+				while (true) {
+					if (_elm_lang$core$Native_Utils.eq(e, 0)) {
+						return r;
+					} else {
+						var r0 = _user$project$Arithmetic$isOdd(e) ? A2(_elm_lang$core$Basics_ops['%'], r * b, modulus) : r;
+						var _v27 = A2(_elm_lang$core$Basics_ops['%'], b * b, modulus),
+							_v28 = (e / 2) | 0,
+							_v29 = r0;
+						b = _v27;
+						e = _v28;
+						r = _v29;
+						continue go;
+					}
+				}
+			});
+		return _elm_lang$core$Native_Utils.eq(modulus, 1) ? 0 : A3(
+			go,
+			A2(_elm_lang$core$Basics_ops['%'], base, modulus),
+			exponent,
+			1);
+	});
+var _user$project$Arithmetic$millerRabin = F2(
+	function (n, witnesses) {
+		var check = F2(
+			function (l, x) {
+				if (_elm_lang$core$Native_Utils.cmp(l, 0) < 1) {
+					return true;
+				} else {
+					var y = A3(_user$project$Arithmetic$powerMod, x, 2, n);
+					return _elm_lang$core$Native_Utils.eq(y, 1) || ((!_elm_lang$core$Native_Utils.eq(y, n - 1)) && A2(check, l - 1, y));
+				}
+			});
+		var _p20 = _user$project$Arithmetic$shiftToOdd(n - 1);
+		var s = _p20._0;
+		var d = _p20._1;
+		var go = function (witnesses) {
+			go:
+			while (true) {
+				var _p21 = witnesses;
+				if (_p21.ctor === '[]') {
+					return true;
+				} else {
+					var _p22 = _p21._1;
+					var x = A3(_user$project$Arithmetic$powerMod, _p21._0, d, n);
+					if (_elm_lang$core$Native_Utils.eq(x, 1) || _elm_lang$core$Native_Utils.eq(x, n - 1)) {
+						var _v31 = _p22;
+						witnesses = _v31;
+						continue go;
+					} else {
+						if (A2(check, s - 1, x)) {
+							return false;
+						} else {
+							var _v32 = _p22;
+							witnesses = _v32;
+							continue go;
+						}
+					}
+				}
+			}
+		};
+		return go(witnesses);
+	});
+var _user$project$Arithmetic$isPrime = function (n) {
+	return (_elm_lang$core$Native_Utils.cmp(n, 13) < 0) ? (_elm_lang$core$Native_Utils.eq(n, 2) || (_elm_lang$core$Native_Utils.eq(n, 3) || (_elm_lang$core$Native_Utils.eq(n, 5) || (_elm_lang$core$Native_Utils.eq(n, 7) || _elm_lang$core$Native_Utils.eq(n, 11))))) : ((_elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], n, 2),
+		0) || (_elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], n, 3),
+		0) || _elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], n, 5),
+		0))) ? false : ((_elm_lang$core$Native_Utils.cmp(n, 1373653) < 0) ? A2(
+		_user$project$Arithmetic$millerRabin,
+		n,
+		{
+			ctor: '::',
+			_0: 2,
+			_1: {
+				ctor: '::',
+				_0: 3,
+				_1: {ctor: '[]'}
+			}
+		}) : A2(
+		_user$project$Arithmetic$millerRabin,
+		n,
+		{
+			ctor: '::',
+			_0: 2,
+			_1: {
+				ctor: '::',
+				_0: 3,
+				_1: {
+					ctor: '::',
+					_0: 5,
+					_1: {
+						ctor: '::',
+						_0: 7,
+						_1: {
+							ctor: '::',
+							_0: 11,
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}
+		})));
+};
+var _user$project$Arithmetic$isEven = function (n) {
+	return _elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], n, 2),
+		0);
+};
+var _user$project$Arithmetic$fst = function (_p23) {
+	var _p24 = _p23;
+	return _p24._0;
+};
+var _user$project$Arithmetic$totient = function (n) {
+	var f = F2(
+		function (p, n) {
+			return ((n * (p - 1)) / p) | 0;
+		});
+	var n0 = _elm_lang$core$Basics$abs(n);
+	return A3(
+		_elm_lang$core$List$foldr,
+		f,
+		n0,
+		A2(
+			_elm_lang$core$List$map,
+			_user$project$Arithmetic$fst,
+			_user$project$Arithmetic$primeExponents(n0)));
+};
 var _user$project$Main$plotSpiral = F3(
 	function (screenWidth, screenHeight, elements) {
 		var strHeight = _elm_lang$core$Basics$toString(screenHeight);
 		var strWidth = _elm_lang$core$Basics$toString(screenWidth);
 		var toText = function (_p0) {
 			var _p1 = _p0;
+			var _p2 = _p1._2;
 			return A2(
 				_elm_lang$svg$Svg$text_,
 				{
@@ -8835,13 +9430,18 @@ var _user$project$Main$plotSpiral = F3(
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$y(
 							_elm_lang$core$Basics$toString(_p1._1)),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fontWeight(
+								_user$project$Arithmetic$isPrime(_p2) ? 'bold' : ''),
+							_1: {ctor: '[]'}
+						}
 					}
 				},
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(_p1._2)),
+						_user$project$Arithmetic$isPrime(_p2) ? _elm_lang$core$Basics$toString(_p2) : '-'),
 					_1: {ctor: '[]'}
 				});
 		};
@@ -8864,12 +9464,12 @@ var _user$project$Main$view = function (model) {
 	var sw = model.screen.width;
 	return A3(_user$project$Main$plotSpiral, sw, sh, es);
 };
-var _user$project$Main$dy = function (n) {
+var _user$project$Main$yTerm = function (n) {
 	return Math.pow(
 		-1,
 		A2(_elm_lang$core$Basics_ops['%'], n, 2));
 };
-var _user$project$Main$dx = function (n) {
+var _user$project$Main$xTerm = function (n) {
 	return Math.pow(
 		-1,
 		A2(_elm_lang$core$Basics_ops['%'], n + 1, 2));
@@ -8891,7 +9491,7 @@ var _user$project$Main$dxs = A2(
 					A2(
 						_elm_lang$core$List$repeat,
 						x,
-						_user$project$Main$dx(x)),
+						_user$project$Main$xTerm(x)),
 					A2(_elm_lang$core$List$repeat, x, 0));
 			},
 			_user$project$Main$elements)));
@@ -8923,7 +9523,7 @@ var _user$project$Main$dys = A2(
 					A2(
 						_elm_lang$core$List$repeat,
 						x,
-						_user$project$Main$dy(x)));
+						_user$project$Main$yTerm(x)));
 			},
 			_user$project$Main$elements)));
 var _user$project$Main$computeYcoord = function (shifty) {
@@ -8959,14 +9559,14 @@ var _user$project$Main$coordAndNumbers = F2(
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var m = function () {
-			var _p2 = msg;
-			var _p4 = _p2._0;
-			var _p3 = _p2._1;
+			var _p3 = msg;
+			var _p5 = _p3._0;
+			var _p4 = _p3._1;
 			return _elm_lang$core$Native_Utils.update(
 				model,
 				{
-					screen: {width: _p4, height: _p3},
-					elements: A2(_user$project$Main$coordAndNumbers, _p4, _p3)
+					screen: {width: _p5, height: _p4},
+					elements: A2(_user$project$Main$coordAndNumbers, _p5, _p4)
 				});
 		}();
 		return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
