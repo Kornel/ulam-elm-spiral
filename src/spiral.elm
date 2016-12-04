@@ -59,7 +59,6 @@ plotSpiral screenWidth screenHeight elements =
       text_
         [ x (toString xcoord)
         , y (toString ycoord)
-        , fontWeight (if (isPrime n) then "bold" else "")
         ] [Html.text (if (isPrime n) then (toString n) else "-")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
