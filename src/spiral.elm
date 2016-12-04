@@ -11,7 +11,9 @@ type Msg = Resize Int Int
 zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
-n = 30
+n = 40
+wx = 15
+wy = 15
 elements = range 1 (n^2)
 
 xTerm n = (-1)^((n+1) % 2)
@@ -29,11 +31,11 @@ dys = elements
 
 computeXcoord shiftx = dxs
       |> List.scanl (+) 0
-      |> map (\x -> x * 30 + shiftx)
+      |> map (\x -> x * wx + shiftx)
 
 computeYcoord shifty = dys
       |> List.scanl (+) 0
-      |> map (\x -> x * 30 + shifty)
+      |> map (\y -> y * wy + shifty)
 
 coordAndNumbers screenWidth screenHeight =
   let
@@ -59,7 +61,8 @@ plotSpiral screenWidth screenHeight elements =
       text_
         [ x (toString xcoord)
         , y (toString ycoord)
-        ] [Html.text (if (isPrime n) then (toString n) else "-")]
+        , fontSize "8"
+        ] [Html.text (if (isPrime n) then (toString n) else "")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
   in
