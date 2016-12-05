@@ -2,7 +2,7 @@ import Html exposing (Html)
 import Window
 import Svg exposing (text_, text, rect, svg, polyline)
 import Svg.Attributes exposing (..)
-import List exposing (length, concat, map, repeat, range, take, tail, map3)
+import List exposing (length, concat, map, repeat, range, take, tail, map3, scanl)
 import String exposing (join)
 import Task
 import Arithmetic exposing(isPrime)
@@ -14,11 +14,23 @@ zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
 n = 100
+wx = 10
+wy = 10
+
+computeXcoord n shiftx = n
+      |> dxs
+      |> scanl (+) 0
+      |> map (\x -> x * wx + shiftx)
+
+computeYcoord n shifty = n
+      |> dys
+      |> scanl (+) 0
+      |> map (\y -> y * wy + shifty)
 
 coordAndNumbers screenWidth screenHeight =
   let
-    xs = computeXcoord (screenWidth // 2)
-    ys = computeYcoord (screenHeight // 2)
+    xs = computeXcoord n (screenWidth // 2)
+    ys = computeYcoord n (screenHeight // 2)
     nums = range 1 (n^2)
   in
     zip3 xs ys nums
