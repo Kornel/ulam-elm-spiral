@@ -13,24 +13,18 @@ type Msg = Resize Int Int
 zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
-n = 100
-wx = 10
-wy = 10
-
-computeXcoord n shiftx = n
-      |> dxs
+computeShiftedCoords : Int -> Int -> List Int -> List Int
+computeShiftedCoords slope intercept elems = elems
       |> scanl (+) 0
-      |> map (\x -> x * wx + shiftx)
+      |> map (\x -> x * slope + intercept)
 
-computeYcoord n shifty = n
-      |> dys
-      |> scanl (+) 0
-      |> map (\y -> y * wy + shifty)
+computeXcoords n wx shiftx = computeShiftedCoords wx shiftx (dxs n)
+computeYcoords n wy shifty = computeShiftedCoords wy shifty (dys n)
 
-coordAndNumbers screenWidth screenHeight =
+coordsAndNumbers n wx wy screenWidth screenHeight =
   let
-    xs = computeXcoord n (screenWidth // 2)
-    ys = computeYcoord n (screenHeight // 2)
+    xs = computeXcoords n wx (screenWidth // 2)
+    ys = computeYcoords n wy (screenHeight // 2)
     nums = range 1 (n^2)
   in
     zip3 xs ys nums
@@ -96,7 +90,7 @@ update msg model =
     let m =
       case msg of
         Resize w h -> {model | screen = {width = w, height = h}
-                             , elements = coordAndNumbers w h}
+                             , elements = coordsAndNumbers 100 10 10 w h}
     in
       (m, Cmd.none)
 
