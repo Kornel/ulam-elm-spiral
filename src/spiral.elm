@@ -1,33 +1,37 @@
 import Html exposing (Html)
 import Window
-import Svg exposing (text_, text, rect, svg)
+import Svg exposing (text_, text, rect, svg, polyline)
 import Svg.Attributes exposing (..)
 import List exposing (length, concat, map, repeat, range, take, tail, map3)
+import String exposing (join)
 import Task
 import Arithmetic exposing(isPrime)
+import Lazy.List
 
 type Msg = Resize Int Int
 
 zip3 : List a -> List b -> List c -> List (a, b, c)
 zip3 = map3 (\a -> \b -> \c -> (a, b, c))
 
-n = 40
-wx = 15
-wy = 15
-elements = range 1 (n^2)
+n = 100
+wx = 10
+wy = 10
+elements = Lazy.List.iterate (\x -> x + 1) 1
 
 xTerm n = (-1)^((n+1) % 2)
 yTerm n = (-1)^(n % 2)
 
 dxs = elements
-      |> map (\x -> repeat x (xTerm x) ++ repeat x 0)
-      |> concat
-      |> take (n^2 - 1)
+      |> Lazy.List.map (\x -> Lazy.List.append (Lazy.List.fromList (List.repeat x (xTerm x))) (Lazy.List.fromList (List.repeat x 0)))
+      |> Lazy.List.flatten
+      |> Lazy.List.take (n^2 - 1)
+      |> Lazy.List.toList
 
 dys = elements
-      |> map (\x -> repeat x 0 ++ (repeat x (yTerm x)))
-      |> concat
-      |> take (n^2 - 1)
+      |> Lazy.List.map (\x -> Lazy.List.append (Lazy.List.fromList (repeat x 0)) (Lazy.List.fromList (repeat x (yTerm x))))
+      |> Lazy.List.flatten
+      |> Lazy.List.take (n^2 - 1)
+      |> Lazy.List.toList
 
 computeXcoord shiftx = dxs
       |> List.scanl (+) 0
@@ -57,6 +61,11 @@ type alias Model =
 plotSpiral : Int -> Int -> UElements -> Html.Html msg
 plotSpiral screenWidth screenHeight elements =
   let
+    primeElements elems = List.filter (\(x, y, n) -> isPrime n) elems
+    toCoord (xcoord, ycoord, n) = (toString xcoord) ++ "," ++ (toString ycoord)
+    toCoordString elems  = join "," (map toCoord elems )
+    toPoly : UElements -> Svg.Svg msg
+    toPoly elems = polyline [ fill "none", stroke "black", points (toCoordString (primeElements elems)) ] []
     toText (xcoord, ycoord, n) =
       text_
         [ x (toString xcoord)
@@ -65,8 +74,9 @@ plotSpiral screenWidth screenHeight elements =
         ] [Html.text (if (isPrime n) then (toString n) else "")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
+
   in
-    List.map toText elements
+    [toPoly elements] -- ++ (List.map toText elements)
      |> svg [ width strWidth, height strHeight]
 
 sizeToMsg : Window.Size -> Msg
