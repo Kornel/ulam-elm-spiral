@@ -7,31 +7,9 @@ import String exposing (join)
 import Task
 import Arithmetic exposing(isPrime)
 import Ulam exposing(..)
-import Debug
+import UlamSvg exposing (..)
 
 type Msg = Resize Int Int
-type alias UElements = List (Int, Int, Int, Bool)
-
-zip4 : List a -> List b -> List c -> List d -> List (a, b, c, d)
-zip4 = map4 (\a b c d -> (a, b, c, d))
-
-computeShiftedCoords : Int -> Int -> List Int -> List Int
-computeShiftedCoords slope intercept elems = elems
-      |> scanl (+) 0
-      |> map (\x -> x * slope + intercept)
-
-computeXcoords n wx shiftx = computeShiftedCoords wx shiftx (dxs n)
-computeYcoords n wy shifty = computeShiftedCoords wy shifty (dys n)
-
-coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> UElements
-coordsAndNumbers n wx wy screenWidth screenHeight =
-  let
-    xs = computeXcoords n wx (screenWidth // 2)
-    ys = computeYcoords n wy (screenHeight // 2)
-    nums = range 1 (n^2)
-    arePrime = map isPrime nums
-  in
-    zip4 xs ys nums arePrime
 
 type alias Model =
     { screen :
@@ -44,27 +22,6 @@ type alias Model =
          , wy : Int
         }
     }
-
-plotSpiral : Int -> Int -> UElements -> Html.Html msg
-plotSpiral screenWidth screenHeight elements =
-  let
-    primeElements elems = List.filter (\(x, y, n, p) -> p) elems
-    toCoord (xcoord, ycoord, _, _) = (toString xcoord) ++ "," ++ (toString ycoord)
-    toCoordString elems = join "," (map toCoord elems )
-    toPoly : UElements -> Svg.Svg msg
-    toPoly elems = polyline [ fill "none", stroke "black", points (toCoordString (primeElements elems)) ] []
-    toText (xcoord, ycoord, n, prime) =
-      text_
-        [ x (toString xcoord)
-        , y (toString ycoord)
-        , fontSize "8"
-        ] [Html.text (if prime then (toString n) else "-")]
-    strWidth = toString screenWidth
-    strHeight = toString screenHeight
-
-  in
-    [toPoly elements] ++ (List.map toText elements)
-     |> svg [ width strWidth, height strHeight]
 
 sizeToMsg : Window.Size -> Msg
 sizeToMsg size = Resize size.width size.height
@@ -95,9 +52,8 @@ view model =
       wx = model.spiral.wx
       wy = model.spiral.wy
       n = model.spiral.n
-      es = coordsAndNumbers n wx wy sw sh
     in
-      plotSpiral sw sh es
+      plotSpiral n wx wy sw sh
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =

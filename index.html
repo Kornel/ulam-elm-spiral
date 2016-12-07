@@ -9453,114 +9453,32 @@ var _user$project$Ulam$dxs = function (n) {
 			},
 			A2(_elm_lang$core$List$range, 1, 4 * n)));
 };
-var _user$project$Main$update = F2(
-	function (msg, model) {
-		var m = function () {
-			var _p0 = msg;
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					screen: {width: _p0._0, height: _p0._1}
-				});
-		}();
-		return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
-	});
-var _user$project$Main$plotSpiral = F3(
-	function (screenWidth, screenHeight, elements) {
-		var strHeight = _elm_lang$core$Basics$toString(screenHeight);
-		var strWidth = _elm_lang$core$Basics$toString(screenWidth);
-		var toText = function (_p1) {
-			var _p2 = _p1;
-			return A2(
-				_elm_lang$svg$Svg$text_,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$x(
-						_elm_lang$core$Basics$toString(_p2._0)),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$y(
-							_elm_lang$core$Basics$toString(_p2._1)),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$fontSize('8'),
-							_1: {ctor: '[]'}
-						}
-					}
-				},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text(
-						_p2._3 ? _elm_lang$core$Basics$toString(_p2._2) : '-'),
-					_1: {ctor: '[]'}
-				});
-		};
-		var toCoord = function (_p3) {
-			var _p4 = _p3;
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(_p4._0),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					',',
-					_elm_lang$core$Basics$toString(_p4._1)));
-		};
-		var toCoordString = function (elems) {
-			return A2(
-				_elm_lang$core$String$join,
-				',',
-				A2(_elm_lang$core$List$map, toCoord, elems));
-		};
-		var primeElements = function (elems) {
-			return A2(
-				_elm_lang$core$List$filter,
-				function (_p5) {
-					var _p6 = _p5;
-					return _p6._3;
-				},
-				elems);
-		};
-		var toPoly = function (elems) {
-			return A2(
-				_elm_lang$svg$Svg$polyline,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$points(
-								toCoordString(
-									primeElements(elems))),
-							_1: {ctor: '[]'}
-						}
-					}
-				},
-				{ctor: '[]'});
-		};
-		return A2(
-			_elm_lang$svg$Svg$svg,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$width(strWidth),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$height(strHeight),
-					_1: {ctor: '[]'}
-				}
-			},
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				{
-					ctor: '::',
-					_0: toPoly(elements),
-					_1: {ctor: '[]'}
-				},
-				A2(_elm_lang$core$List$map, toText, elements)));
-	});
-var _user$project$Main$computeShiftedCoords = F3(
+var _user$project$UlamSvg$polylineSvgCoord = function (_p0) {
+	var _p1 = _p0;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_elm_lang$core$Basics$toString(_p1._0),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			',',
+			_elm_lang$core$Basics$toString(_p1._1)));
+};
+var _user$project$UlamSvg$polylineSvgCoords = function (elems) {
+	return A2(
+		_elm_lang$core$String$join,
+		',',
+		A2(_elm_lang$core$List$map, _user$project$UlamSvg$polylineSvgCoord, elems));
+};
+var _user$project$UlamSvg$filterPrimes = function (elems) {
+	return A2(
+		_elm_lang$core$List$filter,
+		function (_p2) {
+			var _p3 = _p2;
+			return _p3._3;
+		},
+		elems);
+};
+var _user$project$UlamSvg$computeShiftedCoords = F3(
 	function (slope, intercept, elems) {
 		return A2(
 			_elm_lang$core$List$map,
@@ -9576,37 +9494,120 @@ var _user$project$Main$computeShiftedCoords = F3(
 				0,
 				elems));
 	});
-var _user$project$Main$computeXcoords = F3(
-	function (n, wx, shiftx) {
+var _user$project$UlamSvg$computeXcoords = F3(
+	function (n, elemWidth, centreX) {
 		return A3(
-			_user$project$Main$computeShiftedCoords,
-			wx,
-			shiftx,
+			_user$project$UlamSvg$computeShiftedCoords,
+			elemWidth,
+			centreX,
 			_user$project$Ulam$dxs(n));
 	});
-var _user$project$Main$computeYcoords = F3(
-	function (n, wy, shifty) {
+var _user$project$UlamSvg$computeYcoords = F3(
+	function (n, elemHeight, centreY) {
 		return A3(
-			_user$project$Main$computeShiftedCoords,
-			wy,
-			shifty,
+			_user$project$UlamSvg$computeShiftedCoords,
+			elemHeight,
+			centreY,
 			_user$project$Ulam$dys(n));
 	});
-var _user$project$Main$zip4 = _elm_lang$core$List$map4(
+var _user$project$UlamSvg$zip4 = _elm_lang$core$List$map4(
 	F4(
 		function (a, b, c, d) {
 			return {ctor: '_Tuple4', _0: a, _1: b, _2: c, _3: d};
 		}));
-var _user$project$Main$coordsAndNumbers = F5(
-	function (n, wx, wy, screenWidth, screenHeight) {
+var _user$project$UlamSvg$coordsAndNumbers = F5(
+	function (n, elemWidth, elemHeight, screenWidth, screenHeight) {
 		var nums = A2(
 			_elm_lang$core$List$range,
 			1,
 			Math.pow(n, 2));
-		var arePrime = A2(_elm_lang$core$List$map, _user$project$Arithmetic$isPrime, nums);
-		var ys = A3(_user$project$Main$computeYcoords, n, wy, (screenHeight / 2) | 0);
-		var xs = A3(_user$project$Main$computeXcoords, n, wx, (screenWidth / 2) | 0);
-		return A4(_user$project$Main$zip4, xs, ys, nums, arePrime);
+		var whichPrime = A2(_elm_lang$core$List$map, _user$project$Arithmetic$isPrime, nums);
+		var ys = A3(_user$project$UlamSvg$computeYcoords, n, elemHeight, (screenHeight / 2) | 0);
+		var xs = A3(_user$project$UlamSvg$computeXcoords, n, elemWidth, (screenWidth / 2) | 0);
+		return A4(_user$project$UlamSvg$zip4, xs, ys, nums, whichPrime);
+	});
+var _user$project$UlamSvg$plotSpiral = F5(
+	function (n, wx, wy, screenWidth, screenHeight) {
+		var toText = function (_p4) {
+			var _p5 = _p4;
+			return A2(
+				_elm_lang$svg$Svg$text_,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$x(
+						_elm_lang$core$Basics$toString(_p5._0)),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$y(
+							_elm_lang$core$Basics$toString(_p5._1)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fontSize('8'),
+							_1: {ctor: '[]'}
+						}
+					}
+				},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						_p5._3 ? _elm_lang$core$Basics$toString(_p5._2) : '-'),
+					_1: {ctor: '[]'}
+				});
+		};
+		var elems = A5(_user$project$UlamSvg$coordsAndNumbers, n, wx, wy, screenWidth, screenHeight);
+		var primes = _user$project$UlamSvg$filterPrimes(elems);
+		var toPoly = function (elems) {
+			return A2(
+				_elm_lang$svg$Svg$polyline,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$points(
+								_user$project$UlamSvg$polylineSvgCoords(primes)),
+							_1: {ctor: '[]'}
+						}
+					}
+				},
+				{ctor: '[]'});
+		};
+		var strHeight = _elm_lang$core$Basics$toString(screenHeight);
+		var strWidth = _elm_lang$core$Basics$toString(screenWidth);
+		return A2(
+			_elm_lang$svg$Svg$svg,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$width(strWidth),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$height(strHeight),
+					_1: {ctor: '[]'}
+				}
+			},
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
+					ctor: '::',
+					_0: toPoly(elems),
+					_1: {ctor: '[]'}
+				},
+				A2(_elm_lang$core$List$map, toText, elems)));
+	});
+var _user$project$Main$update = F2(
+	function (msg, model) {
+		var m = function () {
+			var _p0 = msg;
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{
+					screen: {width: _p0._0, height: _p0._1}
+				});
+		}();
+		return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
 	});
 var _user$project$Main$view = function (model) {
 	var n = model.spiral.n;
@@ -9614,8 +9615,7 @@ var _user$project$Main$view = function (model) {
 	var wx = model.spiral.wx;
 	var sh = model.screen.height;
 	var sw = model.screen.width;
-	var es = A5(_user$project$Main$coordsAndNumbers, n, wx, wy, sw, sh);
-	return A3(_user$project$Main$plotSpiral, sw, sh, es);
+	return A5(_user$project$UlamSvg$plotSpiral, n, wx, wy, sw, sh);
 };
 var _user$project$Main$Model = F2(
 	function (a, b) {
