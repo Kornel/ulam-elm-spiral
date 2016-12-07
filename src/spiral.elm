@@ -21,6 +21,7 @@ computeShiftedCoords slope intercept elems = elems
 computeXcoords n wx shiftx = computeShiftedCoords wx shiftx (dxs n)
 computeYcoords n wy shifty = computeShiftedCoords wy shifty (dys n)
 
+coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> List (Int, Int, Int)
 coordsAndNumbers n wx wy screenWidth screenHeight =
   let
     xs = computeXcoords n wx (screenWidth // 2)
@@ -35,7 +36,11 @@ type alias Model =
         { width : Int
         , height : Int
         },
-      elements: UElements
+      spiral :
+        {  n : Int
+         , wx : Int
+         , wy : Int
+        }
     }
 
 plotSpiral : Int -> Int -> UElements -> Html.Html msg
@@ -71,7 +76,11 @@ init =
         {  width = 0
          , height = 0
         },
-        elements = []
+        spiral =
+        {  n = 50
+         , wx = 10
+         , wy = 10
+        }
       },
       initialSizeCmd
     )
@@ -81,7 +90,10 @@ view model =
     let
       sw = model.screen.width
       sh = model.screen.height
-      es = model.elements
+      wx = model.spiral.wx
+      wy = model.spiral.wy
+      n = model.spiral.n
+      es = coordsAndNumbers n wx wy sw sh
     in
       plotSpiral sw sh es
 
@@ -89,8 +101,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     let m =
       case msg of
-        Resize w h -> {model | screen = {width = w, height = h}
-                             , elements = coordsAndNumbers 100 10 10 w h}
+        Resize w h -> {model | screen = {width = w, height = h} }
     in
       (m, Cmd.none)
 
