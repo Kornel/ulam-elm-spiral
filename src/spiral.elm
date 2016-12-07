@@ -2,16 +2,17 @@ import Html exposing (Html)
 import Window
 import Svg exposing (text_, text, rect, svg, polyline)
 import Svg.Attributes exposing (..)
-import List exposing (length, concat, map, repeat, range, take, tail, map3, scanl)
+import List exposing (length, concat, map, repeat, range, take, tail, map4, scanl)
 import String exposing (join)
 import Task
 import Arithmetic exposing(isPrime)
 import Ulam exposing(..)
 
 type Msg = Resize Int Int
+type alias UElements = List (Int, Int, Int, Bool)
 
-zip3 : List a -> List b -> List c -> List (a, b, c)
-zip3 = map3 (\a -> \b -> \c -> (a, b, c))
+zip4 : List a -> List b -> List c -> List d -> List (a, b, c, d)
+zip4 = map4 (\a b c d -> (a, b, c, d))
 
 computeShiftedCoords : Int -> Int -> List Int -> List Int
 computeShiftedCoords slope intercept elems = elems
@@ -21,16 +22,16 @@ computeShiftedCoords slope intercept elems = elems
 computeXcoords n wx shiftx = computeShiftedCoords wx shiftx (dxs n)
 computeYcoords n wy shifty = computeShiftedCoords wy shifty (dys n)
 
-coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> List (Int, Int, Int)
+coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> UElements
 coordsAndNumbers n wx wy screenWidth screenHeight =
   let
     xs = computeXcoords n wx (screenWidth // 2)
     ys = computeYcoords n wy (screenHeight // 2)
     nums = range 1 (n^2)
+    arePrime = map isPrime nums
   in
-    zip3 xs ys nums
+    zip4 xs ys nums arePrime
 
-type alias UElements = List (Int, Int, Int)
 type alias Model =
     { screen :
         { width : Int
@@ -46,17 +47,17 @@ type alias Model =
 plotSpiral : Int -> Int -> UElements -> Html.Html msg
 plotSpiral screenWidth screenHeight elements =
   let
-    primeElements elems = List.filter (\(x, y, n) -> isPrime n) elems
-    toCoord (xcoord, ycoord, n) = (toString xcoord) ++ "," ++ (toString ycoord)
-    toCoordString elems  = join "," (map toCoord elems )
+    primeElements elems = List.filter (\(x, y, n, p) -> p) elems
+    toCoord (xcoord, ycoord, _, _) = (toString xcoord) ++ "," ++ (toString ycoord)
+    toCoordString elems = join "," (map toCoord elems )
     toPoly : UElements -> Svg.Svg msg
     toPoly elems = polyline [ fill "none", stroke "black", points (toCoordString (primeElements elems)) ] []
-    toText (xcoord, ycoord, n) =
+    toText (xcoord, ycoord, n, prime) =
       text_
         [ x (toString xcoord)
         , y (toString ycoord)
         , fontSize "8"
-        ] [Html.text (if (isPrime n) then (toString n) else "")]
+        ] [Html.text (if prime then (toString n) else "")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
 
