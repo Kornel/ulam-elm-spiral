@@ -2662,342 +2662,7 @@ var _elm_lang$core$Array$repeat = F2(
 			_elm_lang$core$Basics$always(e));
 	});
 var _elm_lang$core$Array$Array = {ctor: 'Array'};
-//import Native.Utils //
-
-var _elm_lang$core$Native_Char = function() {
-
-return {
-	fromCode: function(c) { return _elm_lang$core$Native_Utils.chr(String.fromCharCode(c)); },
-	toCode: function(c) { return c.charCodeAt(0); },
-	toUpper: function(c) { return _elm_lang$core$Native_Utils.chr(c.toUpperCase()); },
-	toLower: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLowerCase()); },
-	toLocaleUpper: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLocaleUpperCase()); },
-	toLocaleLower: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLocaleLowerCase()); }
-};
-
-}();var _elm_lang$core$Char$fromCode = _elm_lang$core$Native_Char.fromCode;
-var _elm_lang$core$Char$toCode = _elm_lang$core$Native_Char.toCode;
-var _elm_lang$core$Char$toLocaleLower = _elm_lang$core$Native_Char.toLocaleLower;
-var _elm_lang$core$Char$toLocaleUpper = _elm_lang$core$Native_Char.toLocaleUpper;
-var _elm_lang$core$Char$toLower = _elm_lang$core$Native_Char.toLower;
-var _elm_lang$core$Char$toUpper = _elm_lang$core$Native_Char.toUpper;
-var _elm_lang$core$Char$isBetween = F3(
-	function (low, high, $char) {
-		var code = _elm_lang$core$Char$toCode($char);
-		return (_elm_lang$core$Native_Utils.cmp(
-			code,
-			_elm_lang$core$Char$toCode(low)) > -1) && (_elm_lang$core$Native_Utils.cmp(
-			code,
-			_elm_lang$core$Char$toCode(high)) < 1);
-	});
-var _elm_lang$core$Char$isUpper = A2(
-	_elm_lang$core$Char$isBetween,
-	_elm_lang$core$Native_Utils.chr('A'),
-	_elm_lang$core$Native_Utils.chr('Z'));
-var _elm_lang$core$Char$isLower = A2(
-	_elm_lang$core$Char$isBetween,
-	_elm_lang$core$Native_Utils.chr('a'),
-	_elm_lang$core$Native_Utils.chr('z'));
-var _elm_lang$core$Char$isDigit = A2(
-	_elm_lang$core$Char$isBetween,
-	_elm_lang$core$Native_Utils.chr('0'),
-	_elm_lang$core$Native_Utils.chr('9'));
-var _elm_lang$core$Char$isOctDigit = A2(
-	_elm_lang$core$Char$isBetween,
-	_elm_lang$core$Native_Utils.chr('0'),
-	_elm_lang$core$Native_Utils.chr('7'));
-var _elm_lang$core$Char$isHexDigit = function ($char) {
-	return _elm_lang$core$Char$isDigit($char) || (A3(
-		_elm_lang$core$Char$isBetween,
-		_elm_lang$core$Native_Utils.chr('a'),
-		_elm_lang$core$Native_Utils.chr('f'),
-		$char) || A3(
-		_elm_lang$core$Char$isBetween,
-		_elm_lang$core$Native_Utils.chr('A'),
-		_elm_lang$core$Native_Utils.chr('F'),
-		$char));
-};
-//import Native.Utils //
-
-var _elm_lang$core$Native_Scheduler = function() {
-
-var MAX_STEPS = 10000;
-
-
-// TASKS
-
-function succeed(value)
-{
-	return {
-		ctor: '_Task_succeed',
-		value: value
-	};
-}
-
-function fail(error)
-{
-	return {
-		ctor: '_Task_fail',
-		value: error
-	};
-}
-
-function nativeBinding(callback)
-{
-	return {
-		ctor: '_Task_nativeBinding',
-		callback: callback,
-		cancel: null
-	};
-}
-
-function andThen(callback, task)
-{
-	return {
-		ctor: '_Task_andThen',
-		callback: callback,
-		task: task
-	};
-}
-
-function onError(callback, task)
-{
-	return {
-		ctor: '_Task_onError',
-		callback: callback,
-		task: task
-	};
-}
-
-function receive(callback)
-{
-	return {
-		ctor: '_Task_receive',
-		callback: callback
-	};
-}
-
-
-// PROCESSES
-
-function rawSpawn(task)
-{
-	var process = {
-		ctor: '_Process',
-		id: _elm_lang$core$Native_Utils.guid(),
-		root: task,
-		stack: null,
-		mailbox: []
-	};
-
-	enqueue(process);
-
-	return process;
-}
-
-function spawn(task)
-{
-	return nativeBinding(function(callback) {
-		var process = rawSpawn(task);
-		callback(succeed(process));
-	});
-}
-
-function rawSend(process, msg)
-{
-	process.mailbox.push(msg);
-	enqueue(process);
-}
-
-function send(process, msg)
-{
-	return nativeBinding(function(callback) {
-		rawSend(process, msg);
-		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-	});
-}
-
-function kill(process)
-{
-	return nativeBinding(function(callback) {
-		var root = process.root;
-		if (root.ctor === '_Task_nativeBinding' && root.cancel)
-		{
-			root.cancel();
-		}
-
-		process.root = null;
-
-		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-	});
-}
-
-function sleep(time)
-{
-	return nativeBinding(function(callback) {
-		var id = setTimeout(function() {
-			callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-		}, time);
-
-		return function() { clearTimeout(id); };
-	});
-}
-
-
-// STEP PROCESSES
-
-function step(numSteps, process)
-{
-	while (numSteps < MAX_STEPS)
-	{
-		var ctor = process.root.ctor;
-
-		if (ctor === '_Task_succeed')
-		{
-			while (process.stack && process.stack.ctor === '_Task_onError')
-			{
-				process.stack = process.stack.rest;
-			}
-			if (process.stack === null)
-			{
-				break;
-			}
-			process.root = process.stack.callback(process.root.value);
-			process.stack = process.stack.rest;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_fail')
-		{
-			while (process.stack && process.stack.ctor === '_Task_andThen')
-			{
-				process.stack = process.stack.rest;
-			}
-			if (process.stack === null)
-			{
-				break;
-			}
-			process.root = process.stack.callback(process.root.value);
-			process.stack = process.stack.rest;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_andThen')
-		{
-			process.stack = {
-				ctor: '_Task_andThen',
-				callback: process.root.callback,
-				rest: process.stack
-			};
-			process.root = process.root.task;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_onError')
-		{
-			process.stack = {
-				ctor: '_Task_onError',
-				callback: process.root.callback,
-				rest: process.stack
-			};
-			process.root = process.root.task;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_nativeBinding')
-		{
-			process.root.cancel = process.root.callback(function(newRoot) {
-				process.root = newRoot;
-				enqueue(process);
-			});
-
-			break;
-		}
-
-		if (ctor === '_Task_receive')
-		{
-			var mailbox = process.mailbox;
-			if (mailbox.length === 0)
-			{
-				break;
-			}
-
-			process.root = process.root.callback(mailbox.shift());
-			++numSteps;
-			continue;
-		}
-
-		throw new Error(ctor);
-	}
-
-	if (numSteps < MAX_STEPS)
-	{
-		return numSteps + 1;
-	}
-	enqueue(process);
-
-	return numSteps;
-}
-
-
-// WORK QUEUE
-
-var working = false;
-var workQueue = [];
-
-function enqueue(process)
-{
-	workQueue.push(process);
-
-	if (!working)
-	{
-		setTimeout(work, 0);
-		working = true;
-	}
-}
-
-function work()
-{
-	var numSteps = 0;
-	var process;
-	while (numSteps < MAX_STEPS && (process = workQueue.shift()))
-	{
-		if (process.root)
-		{
-			numSteps = step(numSteps, process);
-		}
-	}
-	if (!process)
-	{
-		working = false;
-		return;
-	}
-	setTimeout(work, 0);
-}
-
-
-return {
-	succeed: succeed,
-	fail: fail,
-	nativeBinding: nativeBinding,
-	andThen: F2(andThen),
-	onError: F2(onError),
-	receive: receive,
-
-	spawn: spawn,
-	kill: kill,
-	sleep: sleep,
-	send: F2(send),
-
-	rawSpawn: rawSpawn,
-	rawSend: rawSend
-};
-
-}();//import //
+//import //
 
 var _elm_lang$core$Native_Platform = function() {
 
@@ -3557,7 +3222,287 @@ return {
 };
 
 }();
-var _elm_lang$core$Platform_Cmd$batch = _elm_lang$core$Native_Platform.batch;
+//import Native.Utils //
+
+var _elm_lang$core$Native_Scheduler = function() {
+
+var MAX_STEPS = 10000;
+
+
+// TASKS
+
+function succeed(value)
+{
+	return {
+		ctor: '_Task_succeed',
+		value: value
+	};
+}
+
+function fail(error)
+{
+	return {
+		ctor: '_Task_fail',
+		value: error
+	};
+}
+
+function nativeBinding(callback)
+{
+	return {
+		ctor: '_Task_nativeBinding',
+		callback: callback,
+		cancel: null
+	};
+}
+
+function andThen(callback, task)
+{
+	return {
+		ctor: '_Task_andThen',
+		callback: callback,
+		task: task
+	};
+}
+
+function onError(callback, task)
+{
+	return {
+		ctor: '_Task_onError',
+		callback: callback,
+		task: task
+	};
+}
+
+function receive(callback)
+{
+	return {
+		ctor: '_Task_receive',
+		callback: callback
+	};
+}
+
+
+// PROCESSES
+
+function rawSpawn(task)
+{
+	var process = {
+		ctor: '_Process',
+		id: _elm_lang$core$Native_Utils.guid(),
+		root: task,
+		stack: null,
+		mailbox: []
+	};
+
+	enqueue(process);
+
+	return process;
+}
+
+function spawn(task)
+{
+	return nativeBinding(function(callback) {
+		var process = rawSpawn(task);
+		callback(succeed(process));
+	});
+}
+
+function rawSend(process, msg)
+{
+	process.mailbox.push(msg);
+	enqueue(process);
+}
+
+function send(process, msg)
+{
+	return nativeBinding(function(callback) {
+		rawSend(process, msg);
+		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+	});
+}
+
+function kill(process)
+{
+	return nativeBinding(function(callback) {
+		var root = process.root;
+		if (root.ctor === '_Task_nativeBinding' && root.cancel)
+		{
+			root.cancel();
+		}
+
+		process.root = null;
+
+		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+	});
+}
+
+function sleep(time)
+{
+	return nativeBinding(function(callback) {
+		var id = setTimeout(function() {
+			callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+		}, time);
+
+		return function() { clearTimeout(id); };
+	});
+}
+
+
+// STEP PROCESSES
+
+function step(numSteps, process)
+{
+	while (numSteps < MAX_STEPS)
+	{
+		var ctor = process.root.ctor;
+
+		if (ctor === '_Task_succeed')
+		{
+			while (process.stack && process.stack.ctor === '_Task_onError')
+			{
+				process.stack = process.stack.rest;
+			}
+			if (process.stack === null)
+			{
+				break;
+			}
+			process.root = process.stack.callback(process.root.value);
+			process.stack = process.stack.rest;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_fail')
+		{
+			while (process.stack && process.stack.ctor === '_Task_andThen')
+			{
+				process.stack = process.stack.rest;
+			}
+			if (process.stack === null)
+			{
+				break;
+			}
+			process.root = process.stack.callback(process.root.value);
+			process.stack = process.stack.rest;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_andThen')
+		{
+			process.stack = {
+				ctor: '_Task_andThen',
+				callback: process.root.callback,
+				rest: process.stack
+			};
+			process.root = process.root.task;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_onError')
+		{
+			process.stack = {
+				ctor: '_Task_onError',
+				callback: process.root.callback,
+				rest: process.stack
+			};
+			process.root = process.root.task;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_nativeBinding')
+		{
+			process.root.cancel = process.root.callback(function(newRoot) {
+				process.root = newRoot;
+				enqueue(process);
+			});
+
+			break;
+		}
+
+		if (ctor === '_Task_receive')
+		{
+			var mailbox = process.mailbox;
+			if (mailbox.length === 0)
+			{
+				break;
+			}
+
+			process.root = process.root.callback(mailbox.shift());
+			++numSteps;
+			continue;
+		}
+
+		throw new Error(ctor);
+	}
+
+	if (numSteps < MAX_STEPS)
+	{
+		return numSteps + 1;
+	}
+	enqueue(process);
+
+	return numSteps;
+}
+
+
+// WORK QUEUE
+
+var working = false;
+var workQueue = [];
+
+function enqueue(process)
+{
+	workQueue.push(process);
+
+	if (!working)
+	{
+		setTimeout(work, 0);
+		working = true;
+	}
+}
+
+function work()
+{
+	var numSteps = 0;
+	var process;
+	while (numSteps < MAX_STEPS && (process = workQueue.shift()))
+	{
+		if (process.root)
+		{
+			numSteps = step(numSteps, process);
+		}
+	}
+	if (!process)
+	{
+		working = false;
+		return;
+	}
+	setTimeout(work, 0);
+}
+
+
+return {
+	succeed: succeed,
+	fail: fail,
+	nativeBinding: nativeBinding,
+	andThen: F2(andThen),
+	onError: F2(onError),
+	receive: receive,
+
+	spawn: spawn,
+	kill: kill,
+	sleep: sleep,
+	send: F2(send),
+
+	rawSpawn: rawSpawn,
+	rawSend: rawSend
+};
+
+}();var _elm_lang$core$Platform_Cmd$batch = _elm_lang$core$Native_Platform.batch;
 var _elm_lang$core$Platform_Cmd$none = _elm_lang$core$Platform_Cmd$batch(
 	{ctor: '[]'});
 var _elm_lang$core$Platform_Cmd_ops = _elm_lang$core$Platform_Cmd_ops || {};
@@ -4286,6 +4231,61 @@ return {
 };
 
 }();
+//import Native.Utils //
+
+var _elm_lang$core$Native_Char = function() {
+
+return {
+	fromCode: function(c) { return _elm_lang$core$Native_Utils.chr(String.fromCharCode(c)); },
+	toCode: function(c) { return c.charCodeAt(0); },
+	toUpper: function(c) { return _elm_lang$core$Native_Utils.chr(c.toUpperCase()); },
+	toLower: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLowerCase()); },
+	toLocaleUpper: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLocaleUpperCase()); },
+	toLocaleLower: function(c) { return _elm_lang$core$Native_Utils.chr(c.toLocaleLowerCase()); }
+};
+
+}();var _elm_lang$core$Char$fromCode = _elm_lang$core$Native_Char.fromCode;
+var _elm_lang$core$Char$toCode = _elm_lang$core$Native_Char.toCode;
+var _elm_lang$core$Char$toLocaleLower = _elm_lang$core$Native_Char.toLocaleLower;
+var _elm_lang$core$Char$toLocaleUpper = _elm_lang$core$Native_Char.toLocaleUpper;
+var _elm_lang$core$Char$toLower = _elm_lang$core$Native_Char.toLower;
+var _elm_lang$core$Char$toUpper = _elm_lang$core$Native_Char.toUpper;
+var _elm_lang$core$Char$isBetween = F3(
+	function (low, high, $char) {
+		var code = _elm_lang$core$Char$toCode($char);
+		return (_elm_lang$core$Native_Utils.cmp(
+			code,
+			_elm_lang$core$Char$toCode(low)) > -1) && (_elm_lang$core$Native_Utils.cmp(
+			code,
+			_elm_lang$core$Char$toCode(high)) < 1);
+	});
+var _elm_lang$core$Char$isUpper = A2(
+	_elm_lang$core$Char$isBetween,
+	_elm_lang$core$Native_Utils.chr('A'),
+	_elm_lang$core$Native_Utils.chr('Z'));
+var _elm_lang$core$Char$isLower = A2(
+	_elm_lang$core$Char$isBetween,
+	_elm_lang$core$Native_Utils.chr('a'),
+	_elm_lang$core$Native_Utils.chr('z'));
+var _elm_lang$core$Char$isDigit = A2(
+	_elm_lang$core$Char$isBetween,
+	_elm_lang$core$Native_Utils.chr('0'),
+	_elm_lang$core$Native_Utils.chr('9'));
+var _elm_lang$core$Char$isOctDigit = A2(
+	_elm_lang$core$Char$isBetween,
+	_elm_lang$core$Native_Utils.chr('0'),
+	_elm_lang$core$Native_Utils.chr('7'));
+var _elm_lang$core$Char$isHexDigit = function ($char) {
+	return _elm_lang$core$Char$isDigit($char) || (A3(
+		_elm_lang$core$Char$isBetween,
+		_elm_lang$core$Native_Utils.chr('a'),
+		_elm_lang$core$Native_Utils.chr('f'),
+		$char) || A3(
+		_elm_lang$core$Char$isBetween,
+		_elm_lang$core$Native_Utils.chr('A'),
+		_elm_lang$core$Native_Utils.chr('F'),
+		$char));
+};
 var _elm_lang$core$String$fromList = _elm_lang$core$Native_String.fromList;
 var _elm_lang$core$String$toList = _elm_lang$core$Native_String.toList;
 var _elm_lang$core$String$toFloat = _elm_lang$core$Native_String.toFloat;
@@ -5458,6 +5458,32 @@ var _elm_lang$core$Time$subMap = F2(
 			});
 	});
 _elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+var _elm_lang$core$Tuple$mapSecond = F2(
+	function (func, _p0) {
+		var _p1 = _p0;
+		return {
+			ctor: '_Tuple2',
+			_0: _p1._0,
+			_1: func(_p1._1)
+		};
+	});
+var _elm_lang$core$Tuple$mapFirst = F2(
+	function (func, _p2) {
+		var _p3 = _p2;
+		return {
+			ctor: '_Tuple2',
+			_0: func(_p3._0),
+			_1: _p3._1
+		};
+	});
+var _elm_lang$core$Tuple$second = function (_p4) {
+	var _p5 = _p4;
+	return _p5._1;
+};
+var _elm_lang$core$Tuple$first = function (_p6) {
+	var _p7 = _p6;
+	return _p7._0;
+};
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
 //import Maybe, Native.Array, Native.List, Native.Utils, Result //
@@ -6115,32 +6141,6 @@ var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 var _elm_lang$core$Process$kill = _elm_lang$core$Native_Scheduler.kill;
 var _elm_lang$core$Process$sleep = _elm_lang$core$Native_Scheduler.sleep;
 var _elm_lang$core$Process$spawn = _elm_lang$core$Native_Scheduler.spawn;
-var _elm_lang$core$Tuple$mapSecond = F2(
-	function (func, _p0) {
-		var _p1 = _p0;
-		return {
-			ctor: '_Tuple2',
-			_0: _p1._0,
-			_1: func(_p1._1)
-		};
-	});
-var _elm_lang$core$Tuple$mapFirst = F2(
-	function (func, _p2) {
-		var _p3 = _p2;
-		return {
-			ctor: '_Tuple2',
-			_0: func(_p3._0),
-			_1: _p3._1
-		};
-	});
-var _elm_lang$core$Tuple$second = function (_p4) {
-	var _p5 = _p4;
-	return _p5._1;
-};
-var _elm_lang$core$Tuple$first = function (_p6) {
-	var _p7 = _p6;
-	return _p7._0;
-};
 var _elm_lang$dom$Native_Dom = function() {
 
 var fakeNode = {
@@ -9413,32 +9413,132 @@ var _user$project$Arithmetic$totient = function (n) {
 			_user$project$Arithmetic$fst,
 			_user$project$Arithmetic$primeExponents(n0)));
 };
+var _user$project$Ulam$yTerm = function (n) {
+	return Math.pow(
+		-1,
+		A2(_elm_lang$core$Basics_ops['%'], n, 2));
+};
+var _user$project$Ulam$dys = function (n) {
+	return _elm_lang$core$List$concat(
+		A2(
+			_elm_lang$core$List$map,
+			function (x) {
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(_elm_lang$core$List$repeat, x, 0),
+					A2(
+						_elm_lang$core$List$repeat,
+						x,
+						_user$project$Ulam$yTerm(x)));
+			},
+			A2(_elm_lang$core$List$range, 1, 4 * n)));
+};
+var _user$project$Ulam$xTerm = function (n) {
+	return Math.pow(
+		-1,
+		A2(_elm_lang$core$Basics_ops['%'], n + 1, 2));
+};
+var _user$project$Ulam$dxs = function (n) {
+	return _elm_lang$core$List$concat(
+		A2(
+			_elm_lang$core$List$map,
+			function (x) {
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(
+						_elm_lang$core$List$repeat,
+						x,
+						_user$project$Ulam$xTerm(x)),
+					A2(_elm_lang$core$List$repeat, x, 0));
+			},
+			A2(_elm_lang$core$List$range, 1, 4 * n)));
+};
+var _user$project$Main$update = F2(
+	function (msg, model) {
+		var m = function () {
+			var _p0 = msg;
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{
+					screen: {width: _p0._0, height: _p0._1}
+				});
+		}();
+		return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
+	});
 var _user$project$Main$plotSpiral = F3(
 	function (screenWidth, screenHeight, elements) {
 		var strHeight = _elm_lang$core$Basics$toString(screenHeight);
 		var strWidth = _elm_lang$core$Basics$toString(screenWidth);
-		var toText = function (_p0) {
-			var _p1 = _p0;
-			var _p2 = _p1._2;
+		var toText = function (_p1) {
+			var _p2 = _p1;
 			return A2(
 				_elm_lang$svg$Svg$text_,
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$x(
-						_elm_lang$core$Basics$toString(_p1._0)),
+						_elm_lang$core$Basics$toString(_p2._0)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$y(
-							_elm_lang$core$Basics$toString(_p1._1)),
-						_1: {ctor: '[]'}
+							_elm_lang$core$Basics$toString(_p2._1)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fontSize('8'),
+							_1: {ctor: '[]'}
+						}
 					}
 				},
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_user$project$Arithmetic$isPrime(_p2) ? _elm_lang$core$Basics$toString(_p2) : '-'),
+						_p2._3 ? _elm_lang$core$Basics$toString(_p2._2) : '-'),
 					_1: {ctor: '[]'}
 				});
+		};
+		var toCoord = function (_p3) {
+			var _p4 = _p3;
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(_p4._0),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					',',
+					_elm_lang$core$Basics$toString(_p4._1)));
+		};
+		var toCoordString = function (elems) {
+			return A2(
+				_elm_lang$core$String$join,
+				',',
+				A2(_elm_lang$core$List$map, toCoord, elems));
+		};
+		var primeElements = function (elems) {
+			return A2(
+				_elm_lang$core$List$filter,
+				function (_p5) {
+					var _p6 = _p5;
+					return _p6._3;
+				},
+				elems);
+		};
+		var toPoly = function (elems) {
+			return A2(
+				_elm_lang$svg$Svg$polyline,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$points(
+								toCoordString(
+									primeElements(elems))),
+							_1: {ctor: '[]'}
+						}
+					}
+				},
+				{ctor: '[]'});
 		};
 		return A2(
 			_elm_lang$svg$Svg$svg,
@@ -9451,124 +9551,75 @@ var _user$project$Main$plotSpiral = F3(
 					_1: {ctor: '[]'}
 				}
 			},
-			A2(_elm_lang$core$List$map, toText, elements));
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
+					ctor: '::',
+					_0: toPoly(elements),
+					_1: {ctor: '[]'}
+				},
+				A2(_elm_lang$core$List$map, toText, elements)));
 	});
-var _user$project$Main$view = function (model) {
-	var es = model.elements;
-	var sh = model.screen.height;
-	var sw = model.screen.width;
-	return A3(_user$project$Main$plotSpiral, sw, sh, es);
-};
-var _user$project$Main$yTerm = function (n) {
-	return Math.pow(
-		-1,
-		A2(_elm_lang$core$Basics_ops['%'], n, 2));
-};
-var _user$project$Main$xTerm = function (n) {
-	return Math.pow(
-		-1,
-		A2(_elm_lang$core$Basics_ops['%'], n + 1, 2));
-};
-var _user$project$Main$n = 30;
-var _user$project$Main$elements = A2(
-	_elm_lang$core$List$range,
-	1,
-	Math.pow(_user$project$Main$n, 2));
-var _user$project$Main$dxs = A2(
-	_elm_lang$core$List$take,
-	Math.pow(_user$project$Main$n, 2) - 1,
-	_elm_lang$core$List$concat(
-		A2(
+var _user$project$Main$computeShiftedCoords = F3(
+	function (slope, intercept, elems) {
+		return A2(
 			_elm_lang$core$List$map,
 			function (x) {
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					A2(
-						_elm_lang$core$List$repeat,
-						x,
-						_user$project$Main$xTerm(x)),
-					A2(_elm_lang$core$List$repeat, x, 0));
+				return (x * slope) + intercept;
 			},
-			_user$project$Main$elements)));
-var _user$project$Main$computeXcoord = function (shiftx) {
-	return A2(
-		_elm_lang$core$List$map,
-		function (x) {
-			return (x * 30) + shiftx;
-		},
-		A3(
-			_elm_lang$core$List$scanl,
-			F2(
-				function (x, y) {
-					return x + y;
-				}),
-			0,
-			_user$project$Main$dxs));
-};
-var _user$project$Main$dys = A2(
-	_elm_lang$core$List$take,
-	Math.pow(_user$project$Main$n, 2) - 1,
-	_elm_lang$core$List$concat(
-		A2(
-			_elm_lang$core$List$map,
-			function (x) {
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					A2(_elm_lang$core$List$repeat, x, 0),
-					A2(
-						_elm_lang$core$List$repeat,
-						x,
-						_user$project$Main$yTerm(x)));
-			},
-			_user$project$Main$elements)));
-var _user$project$Main$computeYcoord = function (shifty) {
-	return A2(
-		_elm_lang$core$List$map,
-		function (x) {
-			return (x * 30) + shifty;
-		},
-		A3(
-			_elm_lang$core$List$scanl,
-			F2(
-				function (x, y) {
-					return x + y;
-				}),
-			0,
-			_user$project$Main$dys));
-};
-var _user$project$Main$zip3 = _elm_lang$core$List$map3(
-	F3(
-		function (a, b, c) {
-			return {ctor: '_Tuple3', _0: a, _1: b, _2: c};
+			A3(
+				_elm_lang$core$List$scanl,
+				F2(
+					function (x, y) {
+						return x + y;
+					}),
+				0,
+				elems));
+	});
+var _user$project$Main$computeXcoords = F3(
+	function (n, wx, shiftx) {
+		return A3(
+			_user$project$Main$computeShiftedCoords,
+			wx,
+			shiftx,
+			_user$project$Ulam$dxs(n));
+	});
+var _user$project$Main$computeYcoords = F3(
+	function (n, wy, shifty) {
+		return A3(
+			_user$project$Main$computeShiftedCoords,
+			wy,
+			shifty,
+			_user$project$Ulam$dys(n));
+	});
+var _user$project$Main$zip4 = _elm_lang$core$List$map4(
+	F4(
+		function (a, b, c, d) {
+			return {ctor: '_Tuple4', _0: a, _1: b, _2: c, _3: d};
 		}));
-var _user$project$Main$coordAndNumbers = F2(
-	function (screenWidth, screenHeight) {
+var _user$project$Main$coordsAndNumbers = F5(
+	function (n, wx, wy, screenWidth, screenHeight) {
 		var nums = A2(
 			_elm_lang$core$List$range,
 			1,
-			Math.pow(_user$project$Main$n, 2));
-		var ys = _user$project$Main$computeYcoord((screenHeight / 2) | 0);
-		var xs = _user$project$Main$computeXcoord((screenWidth / 2) | 0);
-		return A3(_user$project$Main$zip3, xs, ys, nums);
+			Math.pow(n, 2));
+		var arePrime = A2(_elm_lang$core$List$map, _user$project$Arithmetic$isPrime, nums);
+		var ys = A3(_user$project$Main$computeYcoords, n, wy, (screenHeight / 2) | 0);
+		var xs = A3(_user$project$Main$computeXcoords, n, wx, (screenWidth / 2) | 0);
+		return A4(_user$project$Main$zip4, xs, ys, nums, arePrime);
 	});
-var _user$project$Main$update = F2(
-	function (msg, model) {
-		var m = function () {
-			var _p3 = msg;
-			var _p5 = _p3._0;
-			var _p4 = _p3._1;
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					screen: {width: _p5, height: _p4},
-					elements: A2(_user$project$Main$coordAndNumbers, _p5, _p4)
-				});
-		}();
-		return {ctor: '_Tuple2', _0: m, _1: _elm_lang$core$Platform_Cmd$none};
-	});
+var _user$project$Main$view = function (model) {
+	var n = model.spiral.n;
+	var wy = model.spiral.wy;
+	var wx = model.spiral.wx;
+	var sh = model.screen.height;
+	var sw = model.screen.width;
+	var es = A5(_user$project$Main$coordsAndNumbers, n, wx, wy, sw, sh);
+	return A3(_user$project$Main$plotSpiral, sw, sh, es);
+};
 var _user$project$Main$Model = F2(
 	function (a, b) {
-		return {screen: a, elements: b};
+		return {screen: a, spiral: b};
 	});
 var _user$project$Main$Resize = F2(
 	function (a, b) {
@@ -9582,7 +9633,7 @@ var _user$project$Main$init = {
 	ctor: '_Tuple2',
 	_0: {
 		screen: {width: 0, height: 0},
-		elements: {ctor: '[]'}
+		spiral: {n: 50, wx: 12, wy: 12}
 	},
 	_1: _user$project$Main$initialSizeCmd
 };

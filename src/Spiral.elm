@@ -7,6 +7,7 @@ import String exposing (join)
 import Task
 import Arithmetic exposing(isPrime)
 import Ulam exposing(..)
+import Debug
 
 type Msg = Resize Int Int
 type alias UElements = List (Int, Int, Int, Bool)
@@ -57,12 +58,12 @@ plotSpiral screenWidth screenHeight elements =
         [ x (toString xcoord)
         , y (toString ycoord)
         , fontSize "8"
-        ] [Html.text (if prime then (toString n) else "")]
+        ] [Html.text (if prime then (toString n) else "-")]
     strWidth = toString screenWidth
     strHeight = toString screenHeight
 
   in
-    [toPoly elements] -- ++ (List.map toText elements)
+    [toPoly elements] ++ (List.map toText elements)
      |> svg [ width strWidth, height strHeight]
 
 sizeToMsg : Window.Size -> Msg
@@ -79,8 +80,8 @@ init =
         },
         spiral =
         {  n = 50
-         , wx = 10
-         , wy = 10
+         , wx = 12
+         , wy = 12
         }
       },
       initialSizeCmd

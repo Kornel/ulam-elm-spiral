@@ -1,21 +1,14 @@
 module Ulam exposing(dxs, dys)
 
-import List exposing (repeat)
-import Lazy.List exposing (..)
-
-elements = iterate (\x -> x + 1) 1
+import List exposing (repeat, concat, range, map)
 
 xTerm n = (-1)^((n+1) % 2)
 yTerm n = (-1)^(n % 2)
 
-dxs n = elements
-      |> map (\x -> append (fromList <| List.repeat x (xTerm x)) (fromList <| List.repeat x 0))
-      |> flatten
-      |> take (n^2 - 1)
-      |> toList
+dxs n = range 1 (4 * n)
+      |> map (\x -> repeat x (xTerm x) ++ List.repeat x 0)
+      |> concat
 
-dys n = elements
-      |> map (\x -> append (fromList <| List.repeat x 0) (fromList <| List.repeat x (yTerm x)))
-      |> flatten
-      |> take (n^2 - 1)
-      |> toList
+dys n = range 1 (4 * n)
+      |> map (\x -> List.repeat x 0 ++ repeat x (yTerm x))
+      |> concat
