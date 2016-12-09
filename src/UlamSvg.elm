@@ -14,16 +14,20 @@ type alias UElements = List UElement
 zip4 : List a -> List b -> List c -> List d -> List (a, b, c, d)
 zip4 = map4 (\a b c d -> (a, b, c, d))
 
+
 computeShiftedCoords : Int -> Int -> List Int -> List Int
 computeShiftedCoords slope intercept elems = elems
       |> scanl (+) 0
       |> map (\x -> x * slope + intercept)
 
+
 computeXcoords : Int -> Int -> Int -> List Int
 computeXcoords n elemWidth centreX = computeShiftedCoords elemWidth centreX (dxs n)
 
+
 computeYcoords : Int -> Int -> Int -> List Int
 computeYcoords n elemHeight centreY = computeShiftedCoords elemHeight centreY (dys n)
+
 
 coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> UElements
 coordsAndNumbers n elemWidth elemHeight screenWidth screenHeight =
@@ -35,13 +39,18 @@ coordsAndNumbers n elemWidth elemHeight screenWidth screenHeight =
   in
     zip4 xs ys nums whichPrime
 
+
 filterPrimes : UElements -> UElements
 filterPrimes elems = filter (\(x, y, n, p) -> p) elems
+
 
 polylineSvgCoord : UElement -> String
 polylineSvgCoord (x, y, _, _) = (toString x) ++ "," ++ (toString y)
 
+
+polylineSvgCoords : UElements -> String
 polylineSvgCoords elems = join "," (map polylineSvgCoord elems)
+
 
 plotSpiral : Int -> Int -> Int -> Int -> Int -> Html.Html msg
 plotSpiral n wx wy screenWidth screenHeight =
