@@ -1,6 +1,8 @@
 module Model exposing(..)
 
-type Msg = Resize Int Int
+-- Move this!
+type Msg = Resize Int Int | Move Int Int
+
 
 type alias Model =
     { screen :

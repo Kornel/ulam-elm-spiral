@@ -22,11 +22,13 @@ computeShiftedCoords slope intercept elems = elems
 
 
 computeXcoords : Int -> Int -> Int -> List Int
-computeXcoords n elemWidth centreX = computeShiftedCoords elemWidth centreX (dxs n)
+computeXcoords n elemWidth centreX =
+  computeShiftedCoords elemWidth centreX (dxs n)
 
 
 computeYcoords : Int -> Int -> Int -> List Int
-computeYcoords n elemHeight centreY = computeShiftedCoords elemHeight centreY (dys n)
+computeYcoords n elemHeight centreY =
+  computeShiftedCoords elemHeight centreY (dys n)
 
 
 coordsAndNumbers : Int -> Int -> Int -> Int -> Int -> UElements
@@ -41,15 +43,18 @@ coordsAndNumbers n elemWidth elemHeight screenWidth screenHeight =
 
 
 filterPrimes : UElements -> UElements
-filterPrimes elems = filter (\(x, y, n, p) -> p) elems
+filterPrimes elems =
+  filter (\(x, y, n, p) -> p) elems
 
 
 polylineSvgCoord : UElement -> String
-polylineSvgCoord (x, y, _, _) = (toString x) ++ "," ++ (toString y)
+polylineSvgCoord (x, y, _, _) =
+  (toString x) ++ "," ++ (toString y)
 
 
 polylineSvgCoords : UElements -> String
-polylineSvgCoords elems = join "," (map polylineSvgCoord elems)
+polylineSvgCoords elems =
+  join "," (map polylineSvgCoord elems)
 
 
 plotSpiral : Int -> Int -> Int -> Int -> Int -> Html.Html msg

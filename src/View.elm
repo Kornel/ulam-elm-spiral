@@ -5,17 +5,42 @@ import Task
 import Html exposing (Html)
 import UlamSvg exposing (plotSpiral)
 import Model exposing(Msg, Model)
-
+import Keyboard exposing (KeyCode)
 
 subscriptions : Model.Model -> Sub Model.Msg
-subscriptions model = Window.resizes (\size -> Model.Resize size.width size.height)
+subscriptions model =
+     Sub.batch
+        [ Window.resizes (\size -> Model.Resize size.width size.height)
+        , Keyboard.presses key
+        ]
+
+
+key : KeyCode -> Model.Msg
+key keycode =
+  case keycode of
+    37 ->
+      Model.Move -10 0
+
+    39 ->
+      Model.Move 10 0
+
+    40 ->
+      Model.Move 0 -10
+
+    38 ->
+      Model.Move 0 10
+
+    _ ->
+      Model.Move 0 0
 
 
 sizeToMsg : Window.Size -> Model.Msg
-sizeToMsg size = Model.Resize size.width size.height
+sizeToMsg size =
+  Model.Resize size.width size.height
 
 initialSizeCmd : Cmd Model.Msg
-initialSizeCmd = Task.perform sizeToMsg Window.size
+initialSizeCmd =
+  Task.perform sizeToMsg Window.size
 
 
 view : Model -> Html Msg
